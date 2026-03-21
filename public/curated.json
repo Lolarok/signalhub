@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-03-20T08:30:00Z",
+  "watchlist": [
+    { "id": "hyperliquid",             "symbol": "HYPE",   "sector": "perp",       "thesis": "Dominant perp DEX, real revenue, bear-resilient" },
+    { "id": "bittensor",               "symbol": "TAO",    "sector": "ai",         "thesis": "AI compute marketplace, subnet growth" },
+    { "id": "ondo-finance",            "symbol": "ONDO",   "sector": "rwa",        "thesis": "RWA leader, BlackRock ties, institutional push" },
+    { "id": "jupiter-exchange-solana",  "symbol": "JUP",    "sector": "dex",        "thesis": "Solana #1 DEX aggregator, deep value" },
+    { "id": "ethena",                  "symbol": "ENA",    "sector": "stablecoin", "thesis": "USDe yield stablecoin" },
+    { "id": "pendle",                  "symbol": "PENDLE", "sector": "yield",      "thesis": "Yield tokenization pioneer, DeFi primitive" },
+    { "id": "berachain-bera",          "symbol": "BERA",   "sector": "l1",         "thesis": "Novel PoL consensus, strong DeFi ecosystem" },
+    { "id": "kaito",                   "symbol": "KAITO",  "sector": "ai-social",  "thesis": "AI info marketplace, early momentum" },
+    { "id": "starknet",                "symbol": "STRK",   "sector": "l2",         "thesis": "ZK rollup L2, Ethereum scaling" },
+    { "id": "eigenlayer",              "symbol": "EIGEN",  "sector": "restaking",  "thesis": "Restaking pioneer, ETH security layer" },
+    { "id": "sonic-3",                 "symbol": "S",      "sector": "l1",         "thesis": "High-perf EVM L1, DeFi ecosystem" },
+    { "id": "grass",                   "symbol": "GRASS",  "sector": "depin-ai",   "thesis": "DePIN/AI data network" },
+    { "id": "resolv",                  "symbol": "RESOLV", "sector": "stablecoin", "thesis": "Delta-neutral stablecoin, micro-cap" },
+    { "id": "drift-protocol",          "symbol": "DRIFT",  "sector": "perp",       "thesis": "Solana perp DEX, institutional grade" }
+  ],
+  "sectors": {
+    "perp":       { "label": "Perps",       "emoji": "📊" },
+    "ai":         { "label": "AI",          "emoji": "🧠" },
+    "rwa":        { "label": "RWA",         "emoji": "🏦" },
+    "dex":        { "label": "DEX",         "emoji": "🔄" },
+    "stablecoin": { "label": "Stablecoins", "emoji": "💵" },
+    "yield":      { "label": "Yield",       "emoji": "🌾" },
+    "l1":         { "label": "L1s",         "emoji": "⛓️" },
+    "ai-social":  { "label": "AI Social",   "emoji": "🤖" },
+    "l2":         { "label": "L2s",         "emoji": "📦" },
+    "restaking":  { "label": "Restaking",   "emoji": "🔒" },
+    "depin-ai":   { "label": "DePIN/AI",    "emoji": "📡" }
+  }
+}
