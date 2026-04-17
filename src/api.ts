@@ -36,7 +36,7 @@ export interface CuratedData {
  * This file is the bridge between the Python scanner and the React dashboard.
  */
 export async function fetchCurated(): Promise<CuratedData> {
-  const res = await fetch('/curated.json');
+  const res = await fetch('/signalhub/curated.json');
   if (!res.ok) throw new Error('Failed to load curated data');
   return res.json();
 }
