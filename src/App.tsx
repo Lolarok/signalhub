@@ -53,6 +53,27 @@ export default function App() {
   const [taAnalysis, setTaAnalysis] = useState<any>(null);
   const [refreshingCoin, setRefreshingCoin] = useState<string | null>(null);
 
+  // Export to CSV
+  const handleExportCSV = useCallback(() => {
+    if (displayed.length === 0) return;
+    
+    const headers = ['Symbol', 'Name', 'Score', 'Rating', 'Price', 'Market Cap', '7d %', 'From ATH %'];
+    const rows = displayed.map(r => [
+      r.symbol, r.name, r.score.toString(), r.rating,
+      r.price.toFixed(4), r.marketCap.toString(),
+      r.change7d.toFixed(2), r.athDrop.toFixed(2)
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `signalhub-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [displayed]);
+
   // Manual refresh
   const handleRefresh = useCallback(async () => {
     setState(s => ({ ...s, loading: true, error: null }));
@@ -504,7 +525,12 @@ export default function App() {
         {/* Table */}
         <div className="table-wrap">
           <div className="table-header">
-            <h2 className="table-title">📊 Opportunity Scores</h2>
+            <div className="table-title-row">
+              <h2 className="table-title">📊 Opportunity Scores</h2>
+              <button className="export-btn" onClick={handleExportCSV} title="Export to CSV">
+                📥 Export CSV
+              </button>
+            </div>
             <span className="table-meta">
               {displayed.length} projects • CoinGecko + DeFiLlama • Auto-refreshes every 60s
             </span>
