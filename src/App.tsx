@@ -50,6 +50,53 @@ export default function App() {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [selectedCoin, setSelectedCoin] = useState<ScoreResult | null>(null);
   const [taAnalysis, setTaAnalysis] = useState<any>(null);
+  const [refreshingCoin, setRefreshingCoin] = useState<string | null>(null);
+
+  // Manual refresh
+  const handleRefresh = useCallback(async () => {
+    setState(s => ({ ...s, loading: true, error: null }));
+    try {
+      const [coins, tvl, fg, curated] = await Promise.all([
+        fetchTopCoins(1, 100),
+        fetchTVLData(),
+        fetchFearGreed(),
+        fetchCurated(),
+      ]);
+
+      const watchlistMap = new Map(curated.watchlist.map(w => [w.id, w]));
+      const sectorMap = curated.sectors;
+
+      const scored = coins.map(c => {
+        const result = scoreCoin(c, tvl, fg.value);
+        const curatedEntry = watchlistMap.get(c.id);
+        if (curatedEntry) {
+          const sectorInfo = sectorMap[curatedEntry.sector];
+          result.sector = curatedEntry.sector;
+          result.sectorLabel = sectorInfo?.label ?? curatedEntry.sector;
+          result.sectorEmoji = sectorInfo?.emoji ?? '📌';
+          result.thesis = curatedEntry.thesis;
+          result.isWatchlist = true;
+        }
+        return result;
+      });
+
+      setState({
+        results: scored,
+        curated,
+        analysis: state.analysis,
+        fg,
+        loading: false,
+        error: null,
+        lastUpdated: new Date().toLocaleTimeString(),
+      });
+    } catch (err: any) {
+      setState(s => ({
+        ...s,
+        loading: false,
+        error: err.message || 'Failed to fetch data',
+      }));
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setState(s => ({ ...s, loading: true, error: null }));
