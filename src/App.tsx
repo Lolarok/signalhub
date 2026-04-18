@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchTopCoins, fetchTVLData, fetchFearGreed, fetchCurated, CuratedData } from './api';
 import { scoreCoin, ScoreResult, CoinData, TVLData } from './scoring';
+import CoinChart from './components/CoinChart';
 
 // ── Analysis types ────────────────────────────────────────────────────
 
@@ -47,6 +48,8 @@ export default function App() {
   const [filter, setFilter] = useState<Filter>('all');
   const [sectorFilter, setSectorFilter] = useState<string>('all');
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [selectedCoin, setSelectedCoin] = useState<ScoreResult | null>(null);
+  const [taAnalysis, setTaAnalysis] = useState<any>(null);
 
   const load = useCallback(async () => {
     setState(s => ({ ...s, loading: true, error: null }));
@@ -115,6 +118,34 @@ export default function App() {
     const timer = setInterval(load, 60000);
     return () => clearInterval(timer);
   }, [load]);
+
+  // Load trading agents analysis when a coin is selected
+  useEffect(() => {
+    if (!selectedCoin) {
+      setTaAnalysis(null);
+      return;
+    }
+    const loadTA = async () => {
+      try {
+        const res = await fetch(`/results/${selectedCoin.id}/analysis_latest.json`);
+        if (res.ok) {
+          const data = await res.json();
+          const entries = Object.entries(data);
+          if (entries.length) {
+            const latest = entries[entries.length - 1][1] as any;
+            setTaAnalysis(latest);
+          } else {
+            setTaAnalysis(null);
+          }
+        } else {
+          setTaAnalysis(null);
+        }
+      } catch {
+        setTaAnalysis(null);
+      }
+    };
+    loadTA();
+  }, [selectedCoin]);
 
   // Sort handler
   const handleSort = (key: SortKey) => {
@@ -441,7 +472,7 @@ export default function App() {
               </thead>
               <tbody>
                 {displayed.map((r) => (
-                  <tr key={r.id} className={r.isWatchlist ? 'watchlist-row' : ''}>
+                  <tr key={r.id} className={r.isWatchlist ? 'watchlist-row' : ''} onClick={() => setSelectedCoin(r)} style={{ cursor: 'pointer' }}>
                     <td>
                       <div className="symbol-cell">
                         {r.isWatchlist && <span className="watchlist-badge" title={r.thesis}>🎯</span>}
@@ -501,6 +532,100 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* Coin Detail Modal */}
+      {selectedCoin && (
+        <div className="modal-overlay" onClick={() => setSelectedCoin(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedCoin(null)} aria-label="Close">×</button>
+            <div className="modal-header">
+              <div>
+                <h2>{selectedCoin.name} ({selectedCoin.symbol})</h2>
+                <div className="modal-meta">
+                  Score: <strong style={{ color: getScoreColor(selectedCoin.score) }}>{selectedCoin.score}</strong> — {selectedCoin.rating}
+                  {selectedCoin.isWatchlist && <span className="watchlist-badge">🎯 Watchlist</span>}
+                </div>
+              </div>
+              <div className="modal-stats">
+                <div className="stat">
+                  <span className="stat-label">Price</span>
+                  <span className="stat-value">{formatPrice(selectedCoin.price)}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">Market Cap</span>
+                  <span className="stat-value">{formatMcap(selectedCoin.marketCap)}</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">7d Change</span>
+                  <span className={`stat-value ${getPctClass(selectedCoin.change7d)}`}>
+                    {selectedCoin.change7d >= 0 ? '+' : ''}{selectedCoin.change7d.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="stat">
+                  <span className="stat-label">From ATH</span>
+                  <span className="stat-value negative">{selectedCoin.athDrop.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-body">
+              {/* Chart */}
+              <section className="chart-section">
+                <CoinChart coinId={selectedCoin.id} coinName={selectedCoin.name} days={30} />
+              </section>
+
+              {/* Trading Agents Analysis (if available) */}
+              {taAnalysis && (
+                <section className="ta-analysis-section">
+                  <h3>🤖 Crypto Trading Agents Analysis</h3>
+                  <div className="ta-grid">
+                    <div className="ta-card">
+                      <h4>📊 Market Analyst</h4>
+                      <p>{taAnalysis.market_report || 'No market report available.'}</p>
+                    </div>
+                    <div className="ta-card">
+                      <h4>😊 Sentiment Analyst</h4>
+                      <p>{taAnalysis.sentiment_report || 'No sentiment report available.'}</p>
+                    </div>
+                    <div className="ta-card">
+                      <h4>📈 Fundamentals Analyst</h4>
+                      <p>{taAnalysis.fundamentals_report || 'No fundamentals report available.'}</p>
+                    </div>
+                    <div className="ta-card">
+                      <h4>🔗 On-Chain Analyst</h4>
+                      <p>{taAnalysis.onchain_report || 'No on-chain report available.'}</p>
+                    </div>
+                    <div className="ta-card full-width">
+                      <h4>📋 Investment Plan</h4>
+                      <p>{taAnalysis.investment_plan || 'No investment plan available.'}</p>
+                    </div>
+                    <div className="ta-card full-width decision">
+                      <h4>🏦 Final Decision</h4>
+                      <pre className="decision-text">{taAnalysis.final_trade_decision || 'No decision yet.'}</pre>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Score breakdown */}
+              <section className="breakdown-section">
+                <h3>Score Breakdown</h3>
+                <div className="breakdown-grid">
+                  {Object.entries(selectedCoin.breakdown).map(([key, value]) => (
+                    <div key={key} className="breakdown-item">
+                      <span className="breakdown-label">{key}</span>
+                      <div className="breakdown-bar">
+                        <div className="breakdown-fill" style={{ width: `${value}%` }}></div>
+                      </div>
+                      <span className="breakdown-value">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="footer">
         SignalHub v1.1 • Data: CoinGecko + DeFiLlama + Alternative.me
