@@ -1,21 +1,21 @@
 /**
- * CoinChart — Interactive candlestick chart with volume
+ * CoinChart — Interactive candlestick chart with volume (lightweight-charts v5)
  * Uses TradingView lightweight-charts for professional-grade financial viz
  *
  * Data source: CoinGecko /coins/{id}/ohlc?vs_currency=usd&days=30
  */
 
 import { useEffect, useRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, ColorType, Time, CandlestickData, HistogramData } from 'lightweight-charts';
-
-interface OHLCV {
-  timestamp: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  Time,
+  CandlestickData,
+  HistogramData,
+  CandlestickSeries,
+  HistogramSeries,
+} from 'lightweight-charts';
 
 interface CoinChartProps {
   coinId: string;
@@ -37,7 +37,7 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
       width: chartContainerRef.current.clientWidth,
       height: 400,
       layout: {
-        background: { type: ColorType.Transparent },
+        background: { color: 'transparent' },
         textColor: '#d1d4dc',
       },
       grid: {
@@ -45,7 +45,7 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
         horzLines: { color: 'rgba(42, 46, 57, 0.5)' },
       },
       crosshair: {
-        mode: 1, // Normal crosshair
+        mode: 1,
       },
       rightPriceScale: {
         borderColor: 'rgba(197, 203, 206, 0.3)',
@@ -59,8 +59,8 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
 
     chartRef.current = chart;
 
-    // Candlestick series
-    const candlestickSeries = chart.addCandlestickSeries({
+    // Candlestick series on main price scale
+    const candlestickSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
@@ -69,19 +69,20 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
     });
     candlestickSeriesRef.current = candlestickSeries;
 
-    // Volume series (histogram)
-    const volumeSeries = chart.addHistogramSeries({
+    // Volume histogram on its own price scale (bottom pane)
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       color: '#26a69a',
-      priceFormat: {
-        type: 'volume',
-      },
-      priceScaleId: '',
-      scaleMargins: {
-        top: 0.8, // leave some space for the main series
-        bottom: 0,
-      },
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
     });
     volumeSeriesRef.current = volumeSeries;
+
+    // Configure the 'volume' price scale: position at bottom 20%
+    const volumeScale = chart.priceScale('volume');
+    volumeScale.applyOptions({
+      scaleMargins: { top: 0.8, bottom: 0 },
+      borderColor: 'rgba(197, 203, 206, 0.3)',
+    });
 
     // Responsive resize
     const handleResize = () => {
@@ -111,7 +112,7 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
         if (!res.ok) throw new Error('Failed to fetch OHLCV');
         const data: [number, number, number, number, number, number][] = await res.json();
 
-        // Transform: [timestamp, open, high, low, close, volume]
+        // Transform data
         const candleData: CandlestickData<Time>[] = data.map(([ts, open, high, low, close, volume]) => ({
           time: (ts / 1000) as Time,
           open,
@@ -129,7 +130,6 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
         candlestickSeriesRef.current.setData(candleData);
         volumeSeriesRef.current.setData(volumeData);
 
-        // Fit content
         chartRef.current?.timeScale().fitContent();
       } catch (err) {
         console.error('Failed to load chart data:', err);
