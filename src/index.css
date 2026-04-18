@@ -906,3 +906,44 @@ tr:hover td {
   }
 }
 
+
+/* Timeframe selector */
+.timeframe-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.tf-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tf-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tf-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+
+.chart-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chart-title-row h3 {
+  margin: 0;
+}

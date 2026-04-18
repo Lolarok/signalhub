@@ -20,10 +20,19 @@ import {
 interface CoinChartProps {
   coinId: string;
   coinName: string;
-  days?: 1 | 7 | 30 | 90 | 365;
+  initialDays?: 1 | 7 | 30 | 90 | 365;
 }
 
-export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProps) {
+const TIMEFRAMES = [
+  { label: '1D', value: 1 },
+  { label: '7D', value: 7 },
+  { label: '30D', value: 30 },
+  { label: '90D', value: 90 },
+  { label: '1Y', value: 365 },
+] as const;
+
+export default function CoinChart({ coinId, coinName, initialDays = 30 }: CoinChartProps) {
+  const [days, setDays] = useState<1 | 7 | 30 | 90 | 365>(initialDays);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -142,8 +151,21 @@ export default function CoinChart({ coinId, coinName, days = 30 }: CoinChartProp
   return (
     <div className="coin-chart">
       <div className="chart-header">
-        <h3>{coinName} Price Chart</h3>
-        <span className="chart-subtitle">Last {days} days • CoinGecko data</span>
+        <div className="chart-title-row">
+          <h3>{coinName} Price Chart</h3>
+          <div className="timeframe-selector">
+            {TIMEFRAMES.map(tf => (
+              <button
+                key={tf.value}
+                className={`tf-btn ${days === tf.value ? 'active' : ''}`}
+                onClick={() => setDays(tf.value)}
+              >
+                {tf.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <span className="chart-subtitle">CoinGecko data</span>
       </div>
       <div ref={chartContainerRef} className="chart-container" />
     </div>

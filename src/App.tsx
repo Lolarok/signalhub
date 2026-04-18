@@ -571,7 +571,7 @@ export default function App() {
             <div className="modal-body">
               {/* Chart */}
               <section className="chart-section">
-                <CoinChart coinId={selectedCoin.id} coinName={selectedCoin.name} days={30} />
+                <CoinChart coinId={selectedCoin.id} coinName={selectedCoin.name} initialDays={30} />
               </section>
 
               {/* Trading Agents Analysis (if available) */}
