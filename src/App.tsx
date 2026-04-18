@@ -46,6 +46,7 @@ export default function App() {
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [filter, setFilter] = useState<Filter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [sectorFilter, setSectorFilter] = useState<string>('all');
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [selectedCoin, setSelectedCoin] = useState<ScoreResult | null>(null);
@@ -233,6 +234,15 @@ export default function App() {
   const displayed = useMemo(() => {
     let items = [...state.results];
 
+    // Apply search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(r => 
+        r.symbol.toLowerCase().includes(q) ||
+        r.name.toLowerCase().includes(q)
+      );
+    }
+
     // Apply type filter
     if (filter === 'strong-buy') items = items.filter(r => r.score >= 78);
     else if (filter === 'alert') items = items.filter(r => r.score >= 65);
@@ -255,7 +265,7 @@ export default function App() {
     });
 
     return items;
-  }, [state.results, filter, sectorFilter, sortKey, sortDir]);
+  }, [state.results, searchQuery, filter, sectorFilter, sortKey, sortDir]);
 
   const sortIndicator = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
 
@@ -437,7 +447,21 @@ export default function App() {
         )}
 
         {/* Filters */}
-        <div className="filters">
+        <div className="filters-bar">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search coin..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+            {searchQuery && (
+              <button className="search-clear" onClick={() => setSearchQuery('')}>×</button>
+            )}
+          </div>
+          <div className="filter-buttons">
           <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => { setFilter('all'); setSectorFilter('all'); }}>
             All ({state.results.length})
           </button>
@@ -453,6 +477,7 @@ export default function App() {
           <button className={`filter-btn ${filter === 'watch' ? 'active' : ''}`} onClick={() => setFilter('watch')}>
             👀 Watch ({state.results.filter(r => r.score >= 50 && r.score < 65).length})
           </button>
+          </div>
         </div>
 
         {/* Sector filters (from moltstreet-intelligence) */}
